@@ -350,3 +350,57 @@ To delete KV namespaces:
 ```bash
 wrangler kv:namespace delete --namespace-id=YOUR_NAMESPACE_ID
 ```
+
+## Frequently Asked Questions (FAQ)
+
+### Q: Do I need a Cloudflare Workers paid plan?
+
+A: No! The free tier includes 100,000 requests per day, which is sufficient for most use cases. You only need the paid plan ($5/month) if you exceed this limit.
+
+### Q: Can I use this with my existing Google Analytics user credentials?
+
+A: No, you must use a service account. Service accounts are designed for server-to-server authentication and are more secure for production deployments.
+
+### Q: How much does Cloudflare KV storage cost?
+
+A: The first 1 GB is free. Read operations cost $0.50 per million reads, and writes cost $5 per million writes. For typical MCP usage (mainly token caching), costs are negligible.
+
+### Q: Can I use multiple Google Analytics properties?
+
+A: Yes! The service account just needs to be granted access to all the properties you want to query. Add the service account email to each property's access management.
+
+### Q: How do I update my service account credentials?
+
+A: Use `wrangler secret put GOOGLE_SERVICE_ACCOUNT_KEY` to update the secret. Changes take effect immediately.
+
+### Q: What regions does this deploy to?
+
+A: Cloudflare Workers deploy to Cloudflare's entire global network automatically. Your code runs on the edge closest to your users.
+
+### Q: How do I see logs and debug issues?
+
+A: Use `wrangler tail` to see real-time logs from your worker. You can also view logs in the Cloudflare dashboard.
+
+### Q: Can I use this with the Python MCP server?
+
+A: Yes! You can run both the Python server locally and the Cloudflare Worker deployment. They're independent and use different authentication methods.
+
+### Q: Is my service account key secure?
+
+A: Yes. Cloudflare encrypts all secrets, and they're never exposed in logs or responses. Never commit the JSON key file to version control.
+
+### Q: Can I restrict access to specific IP addresses?
+
+A: Yes, you can add IP filtering in the worker code or use Cloudflare Access for more advanced access control.
+
+### Q: What's the latency like?
+
+A: Very low! Cloudflare Workers run on the edge close to users. The main latency comes from calling Google Analytics APIs, which is unavoidable.
+
+### Q: Can I use custom domains?
+
+A: Yes! You can configure a custom domain in the Cloudflare dashboard under Workers & Pages > your worker > Settings > Domains.
+
+### Q: How do I monitor usage and costs?
+
+A: Check the Cloudflare dashboard for request counts and Worker analytics. KV usage is shown under Workers & Pages > KV.
