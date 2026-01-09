@@ -71,6 +71,8 @@ export default {
       console.error('Error handling request:', error);
       return new Response(
         JSON.stringify({
+          jsonrpc: '2.0',
+          id: null,
           error: {
             code: -32603,
             message: error.message || 'Internal server error',

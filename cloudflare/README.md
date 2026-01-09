@@ -89,6 +89,8 @@ Uses Cloudflare KV for:
 ## Documentation
 
 - [Setup Guide](./CLOUDFLARE_SETUP.md) - Complete setup instructions
+- [Deployment Checklist](./DEPLOYMENT_CHECKLIST.md) - Step-by-step deployment guide
+- [Architecture Overview](./ARCHITECTURE.md) - Technical architecture and design
 - [Cloudflare Workers Docs](https://developers.cloudflare.com/workers/)
 - [Google Analytics API Docs](https://developers.google.com/analytics)
 

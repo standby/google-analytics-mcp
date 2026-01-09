@@ -10,9 +10,13 @@ preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID"
 
 # Environment variables and secrets
 # Configure these in the Cloudflare dashboard:
-# - GOOGLE_SERVICE_ACCOUNT_EMAIL: Service account email
-# - GOOGLE_SERVICE_ACCOUNT_KEY: Service account private key (JSON format)
-# - GOOGLE_CLOUD_PROJECT: Your Google Cloud project ID
+# - GOOGLE_SERVICE_ACCOUNT_KEY: Service account private key (entire JSON file content)
+#
+# The JSON key file should contain all necessary information including:
+# - client_email (service account email)
+# - private_key (RSA private key)
+# - token_uri (OAuth token endpoint)
+# - project_id (Google Cloud project ID)
 
 [vars]
 # Public variables (non-sensitive)

@@ -21,4 +21,5 @@ preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID"  # Replace with your preview namespa
 # wrangler secret put GOOGLE_SERVICE_ACCOUNT_KEY
 # 
 # Required secrets:
-# - GOOGLE_SERVICE_ACCOUNT_KEY: JSON string of your service account key file
+# - GOOGLE_SERVICE_ACCOUNT_KEY: Complete JSON content of your service account key file
+#   (includes client_email, private_key, token_uri, and other fields)
