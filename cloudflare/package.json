@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "description": "Google Analytics MCP Server for Cloudflare Workers",
   "main": "src/index.ts",
+  "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "start": "wrangler dev"
+    "start": "wrangler dev",
+    "cf-typegen": "wrangler types"
   },
   "keywords": [
     "google-analytics",
@@ -16,12 +18,6 @@
   ],
   "author": "",
   "license": "Apache-2.0",
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "@google-analytics/data": "^4.9.0",
-    "@google-analytics/admin": "^4.3.0",
-    "google-auth-library": "^9.15.0"
-  },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241218.0",
     "wrangler": "^3.94.0",
