@@ -65,7 +65,10 @@ Deploy the server to Cloudflare's global edge network. Best for:
 - Global low-latency access
 - No local infrastructure required
 
-See the [Cloudflare Setup Guide](cloudflare/CLOUDFLARE_SETUP.md) for complete instructions.
+See the **[Cloudflare Deployment Guide](CLOUDFLARE.md)** for complete instructions, or jump directly to:
+- [Quick Start](CLOUDFLARE.md#quick-start)
+- [Complete Setup](cloudflare/CLOUDFLARE_SETUP.md)
+- [Architecture](cloudflare/ARCHITECTURE.md)
 
 ## Local Setup Instructions 🔧
 
