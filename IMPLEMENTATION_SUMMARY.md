@@ -1,94 +1,270 @@
-# OAuth User Authentication Implementation Summary
+# OAuth User Authentication as Default - Implementation Summary
 
 ## Overview
 
-This implementation adds OAuth 2.0 user authentication support to the Google Analytics MCP Server, enabling users to authenticate with their personal Google accounts instead of requiring Application Default Credentials (ADC) or service accounts.
+This implementation makes OAuth 2.0 user authentication the **default and primary** authentication method for the Google Analytics MCP Server, similar to how JIRA MCP handles authentication. Users are now required to authenticate with their Google account unless they explicitly opt into using Application Default Credentials (ADC) for automation.
 
 ## Problem Statement
 
-Previously, the MCP server only supported Application Default Credentials (ADC), which required:
-- gcloud CLI installation and configuration
-- Understanding of ADC setup
-- Complex credential management
-
-This created barriers for individual users who simply wanted to access their own Google Analytics data.
+The goal was to make the MCP server work like JIRA MCP:
+- **Ask users to authenticate** when they connect to the MCP server
+- **Use the authenticated account** (e.g., xxx@abc.com) for all operations
+- **Allow different users** to login with their own Google accounts
+- **Enable access to different GA accounts** based on user permissions
+- **Make authentication user-centric by default**, not service-account-centric
 
 ## Solution
 
-Added OAuth 2.0 user authentication flow that:
-- Opens a browser for user to authenticate with their Google account
-- Obtains and stores OAuth tokens locally
-- Automatically refreshes tokens when expired
-- Works alongside existing ADC support (backward compatible)
+Changed the authentication flow to:
+- **Make OAuth the default** - users must configure OAuth to use the server
+- **Require explicit opt-in for ADC** - set `GOOGLE_ANALYTICS_USE_ADC=true` for automation
+- **Provide helpful error messages** - guide users to set up OAuth when not configured
+- **Keep backward compatibility** - ADC still works with the new environment variable
+
+## Key Changes
+
+### 1. Authentication Logic (analytics_mcp/tools/utils.py)
+
+**Before:**
+- Default: ADC (Application Default Credentials)
+- Optional: OAuth (if `GOOGLE_OAUTH_CLIENT_SECRETS` set)
+
+**After:**
+- Default: OAuth (requires `GOOGLE_OAUTH_CLIENT_SECRETS`)
+- Optional: ADC (if `GOOGLE_ANALYTICS_USE_ADC=true` set)
+
+The new logic:
+1. Check if `GOOGLE_ANALYTICS_USE_ADC=true` → use ADC
+2. Otherwise, require OAuth via `GOOGLE_OAUTH_CLIENT_SECRETS`
+3. If OAuth not configured → show helpful error with setup instructions
+
+### 2. Error Message
+
+When OAuth is not configured, users now see a comprehensive error message:
+- ✅ Clear explanation of what's needed
+- ✅ Step-by-step setup instructions
+- ✅ Configuration example for Gemini/Claude
+- ✅ Link to detailed documentation
+- ✅ Alternative ADC option for automation
+
+### 3. Documentation Updates
+
+**README.md:**
+- OAuth described as default authentication method
+- ADC described as optional for automation
+- Updated configuration examples
+- Clearer user authentication flow
+
+**docs/OAUTH_SETUP.md:**
+- Updated to emphasize OAuth as primary method
+- Added "Why User Authentication?" section
+- Updated switching between auth methods section
+
+### 4. New Tests (tests/utils_test.py)
+
+Added comprehensive tests for credential creation:
+- ✅ Test default requires OAuth (error without config)
+- ✅ Test ADC mode with explicit flag
+- ✅ Test OAuth mode with client secrets
+- ✅ Test OAuth takes precedence over ADC=false
+
+## Authentication Flow
+
+### Default Flow (OAuth - User Authentication)
+1. User connects MCP server to their client (Gemini/Claude)
+2. If `GOOGLE_OAUTH_CLIENT_SECRETS` not set → **Error with setup instructions**
+3. User sets up OAuth credentials and configures env var
+4. On first use, browser opens for authentication
+5. User logs in with their Google account (e.g., xxx@abc.com)
+6. User grants permissions (read-only Analytics access)
+7. Token saved to `~/.analytics-mcp/token.json`
+8. All operations use that user's account and GA permissions
+9. Different users can authenticate with their own accounts
+
+### Optional Flow (ADC - Automation)
+1. User sets `GOOGLE_ANALYTICS_USE_ADC=true`
+2. System uses Application Default Credentials
+3. Works for automation, service accounts, CI/CD
+
+## Environment Variables
+
+### New
+- **`GOOGLE_ANALYTICS_USE_ADC`**: Set to `true` to explicitly use ADC instead of OAuth
+
+### Existing (unchanged)
+- **`GOOGLE_OAUTH_CLIENT_SECRETS`**: Path to OAuth client secrets JSON file (now required by default)
+- **`GOOGLE_OAUTH_TOKEN_FILE`**: Custom path for token storage (optional)
+- **`GOOGLE_APPLICATION_CREDENTIALS`**: Path to ADC credentials (only used when `GOOGLE_ANALYTICS_USE_ADC=true`)
+
+## Testing
+
+### Unit Tests
+- **13 total tests, all passing**
+- New credential creation tests: 4 tests
+  - Default requires OAuth
+  - ADC mode with flag
+  - OAuth mode with client secrets
+  - OAuth precedence
+
+### Manual Testing
+Verified authentication flow:
+- ✅ Error message shown when OAuth not configured
+- ✅ Clear setup instructions provided
+- ✅ ADC mode works with explicit flag
+- ✅ All existing tests pass
+
+## Backward Compatibility
+
+**Migration Required for Existing Users:**
+
+Users currently using ADC without OAuth will need to either:
+
+**Option 1: Switch to OAuth (Recommended)**
+```bash
+# Set up OAuth credentials and configure
+export GOOGLE_OAUTH_CLIENT_SECRETS=/path/to/client_secrets.json
+```
+
+**Option 2: Explicitly Enable ADC**
+```bash
+# Keep using ADC by setting the new flag
+export GOOGLE_ANALYTICS_USE_ADC=true
+```
+
+This is an intentional breaking change to align with the user-centric authentication model like JIRA MCP.
+
+## Security Considerations
+
+✅ **All previous security measures maintained:**
+- Read-only scope (`analytics.readonly`)
+- Secure token storage in user's home directory
+- Thread-safe credential caching
+- No credentials in code
+- Automatic token refresh
+
+✅ **Enhanced security:**
+- User authentication is now the default (more secure than service accounts for personal use)
+- Clear error messages prevent misconfiguration
+- Explicit opt-in required for service account mode
+
+## Benefits
+
+1. **User-Centric**: Like JIRA MCP, authentication is tied to the user, not the server
+2. **Multi-User Support**: Different users can authenticate with their own accounts
+3. **Clear Setup**: Helpful error messages guide users through configuration
+4. **Better UX**: OAuth is the default, matching user expectations
+5. **Flexible Access**: Each user sees only their GA properties based on their permissions
+6. **Professional**: Aligns with industry standards for user-facing MCP servers
+
+## Usage Examples
+
+### Standard Configuration (OAuth)
+```json
+{
+  "mcpServers": {
+    "analytics-mcp": {
+      "command": "pipx",
+      "args": ["run", "analytics-mcp"],
+      "env": {
+        "GOOGLE_OAUTH_CLIENT_SECRETS": "/path/to/client_secrets.json"
+      }
+    }
+  }
+}
+```
+
+### Automation Configuration (ADC)
+```json
+{
+  "mcpServers": {
+    "analytics-mcp": {
+      "command": "pipx",
+      "args": ["run", "analytics-mcp"],
+      "env": {
+        "GOOGLE_ANALYTICS_USE_ADC": "true",
+        "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/credentials.json"
+      }
+    }
+  }
+}
+```
+
+## Conclusion
+
+This implementation successfully transforms the Google Analytics MCP Server to work like JIRA MCP with user-centric authentication:
+- ✅ OAuth is now the default and primary method
+- ✅ Users must authenticate to use the server
+- ✅ Each user's account determines GA access
+- ✅ Multiple users can use their own accounts
+- ✅ Clear error messages guide setup
+- ✅ ADC still available for automation
+- ✅ All tests passing
+- ✅ Well documented
+
+The server now asks users to authenticate and operates using their authenticated Google account, exactly as requested in the problem statement.
 
 ## Implementation Details
-
-### Files Added
-
-1. **analytics_mcp/oauth_handler.py**
-   - Implements OAuth 2.0 authorization flow
-   - Manages token storage in `~/.analytics-mcp/token.json`
-   - Handles token refresh automatically
-   - Uses `google-auth-oauthlib` library
-
-2. **docs/OAUTH_SETUP.md**
-   - Comprehensive setup guide
-   - Step-by-step instructions for creating OAuth credentials
-   - Configuration examples for Gemini and Claude
-   - Troubleshooting section
-   - Security best practices
-
-3. **tests/oauth_handler_test.py**
-   - Unit tests for OAuth handler
-   - Tests initialization, credential loading, refresh, and error handling
-   - 6 test cases, all passing
-
-4. **examples/oauth_authentication_example.py**
-   - Demonstration script showing OAuth in action
-   - Fetches and displays Google Analytics account summaries
-   - Includes helpful error messages and setup instructions
-
-5. **examples/README.md**
-   - Documentation for example scripts
-   - Usage instructions and expected output
 
 ### Files Modified
 
 1. **analytics_mcp/tools/utils.py**
-   - Updated `_create_credentials()` to support both OAuth and ADC
-   - Checks for `GOOGLE_OAUTH_CLIENT_SECRETS` environment variable
-   - Implements thread-safe credential caching
-   - Falls back to ADC if OAuth not configured
+   - Changed authentication logic to make OAuth the default
+   - Added check for `GOOGLE_ANALYTICS_USE_ADC` environment variable
+   - Added comprehensive error message when OAuth not configured
+   - OAuth is now checked first, ADC requires explicit opt-in
+   - Thread-safe credential caching maintained
 
-2. **pyproject.toml**
-   - Added `google-auth-oauthlib>=1.0.0` dependency
-   - Fixed package discovery configuration
+2. **README.md**
+   - Updated deployment options to emphasize user authentication
+   - Rewrote credentials section to make OAuth the primary method
+   - Updated configuration examples for both OAuth and ADC
+   - Clarified that OAuth is required by default
+   - ADC described as optional for automation
 
-3. **README.md**
-   - Updated credentials section to document both authentication methods
-   - Added OAuth as recommended option for personal use
-   - Updated Gemini configuration examples
+3. **docs/OAUTH_SETUP.md**
+   - Updated introduction to emphasize OAuth as primary method
+   - Added "Why User Authentication?" section explaining benefits
+   - Updated "When to Use OAuth" section
+   - Updated "Switching Between Methods" section for new behavior
+
+4. **tests/utils_test.py**
+   - Added new test class `TestCredentials` with 4 comprehensive tests
+   - Tests for default OAuth requirement
+   - Tests for explicit ADC mode
+   - Tests for OAuth with client secrets
+   - Tests for OAuth precedence over ADC flag
+
+5. **IMPLEMENTATION_SUMMARY.md** (this file)
+   - Updated to reflect new authentication model
+   - Documented breaking changes and migration path
 
 ## Authentication Flow
 
-### OAuth Flow (New)
-1. User sets `GOOGLE_OAUTH_CLIENT_SECRETS` environment variable
-2. On first use, browser opens for authentication
-3. User grants permissions (read-only Analytics access)
-4. Token saved to `~/.analytics-mcp/token.json`
-5. Subsequent uses load token from file
-6. Token automatically refreshed when expired
+### Default Flow (OAuth - User Authentication)
+1. User connects MCP server to their client (Gemini/Claude)
+2. If `GOOGLE_OAUTH_CLIENT_SECRETS` not set → **Error with setup instructions**
+3. User sets up OAuth credentials and configures env var
+4. On first use, browser opens for authentication
+5. User logs in with their Google account (e.g., xxx@abc.com)
+6. User grants permissions (read-only Analytics access)
+7. Token saved to `~/.analytics-mcp/token.json`
+8. All operations use that user's account and GA permissions
+9. Different users can authenticate with their own accounts
 
-### ADC Flow (Existing, Unchanged)
-1. User does NOT set `GOOGLE_OAUTH_CLIENT_SECRETS`
+### Optional Flow (ADC - Automation)
+1. User sets `GOOGLE_ANALYTICS_USE_ADC=true`
 2. System uses Application Default Credentials
-3. Works as before (backward compatible)
+3. Works for automation, service accounts, CI/CD
 
 ## Environment Variables
 
-- **`GOOGLE_OAUTH_CLIENT_SECRETS`** (required for OAuth): Path to OAuth client secrets JSON file
-- **`GOOGLE_OAUTH_TOKEN_FILE`** (optional): Custom path for token storage (defaults to `~/.analytics-mcp/token.json`)
-- **`GOOGLE_APPLICATION_CREDENTIALS`** (existing): Path to ADC credentials (used when OAuth not configured)
+### New
+- **`GOOGLE_ANALYTICS_USE_ADC`**: Set to `true` to explicitly use ADC instead of OAuth
+
+### Existing (unchanged)
+- **`GOOGLE_OAUTH_CLIENT_SECRETS`**: Path to OAuth client secrets JSON file (now required by default)
+- **`GOOGLE_OAUTH_TOKEN_FILE`**: Custom path for token storage (optional)
+- **`GOOGLE_APPLICATION_CREDENTIALS`**: Path to ADC credentials (only used when `GOOGLE_ANALYTICS_USE_ADC=true`)
 
 ## Security Considerations
 
@@ -112,88 +288,99 @@ Added OAuth 2.0 user authentication flow that:
 
 ## Testing
 
-### Test Coverage
-- 9 total unit tests, all passing
-- Tests for OAuth handler: 6 tests
-  - Initialization with explicit paths
-  - Initialization with environment variables
-  - Error handling without client secrets
-  - Credential loading and caching
-  - Token refresh
-  - Credential clearing
+### Unit Tests
+- **13 total tests, all passing**
+- New credential creation tests: 4 tests
+  - Default requires OAuth
+  - ADC mode with flag
+  - OAuth mode with client secrets
+  - OAuth precedence
+- Existing OAuth handler tests: 6 tests (all still passing)
+- Existing utils tests: 2 tests (all still passing)
+- Existing server tests: 1 test (still passing)
 
-### Manual Testing Recommendations
-To fully test this implementation:
-1. Create OAuth credentials in Google Cloud Console
-2. Run `examples/oauth_authentication_example.py`
-3. Verify browser opens and authentication succeeds
-4. Verify token is saved to `~/.analytics-mcp/token.json`
-5. Run example again to verify token is loaded from cache
-6. Test with actual MCP client (Gemini/Claude)
+### Manual Testing
+Verified authentication flow:
+- ✅ Error message shown when OAuth not configured
+- ✅ Clear setup instructions provided
+- ✅ ADC mode works with explicit flag
+- ✅ All existing tests pass
+- ✅ Code formatted with black
 
 ## Backward Compatibility
 
-✅ **100% Backward Compatible**
-- Existing ADC setup continues to work unchanged
-- OAuth only activated when `GOOGLE_OAUTH_CLIENT_SECRETS` is set
-- All existing tools and APIs work with both authentication methods
+**Migration Required for Existing Users:**
 
-## Usage Examples
+Users currently using ADC without OAuth will need to either:
 
-### For OAuth (New)
+**Option 1: Switch to OAuth (Recommended)**
 ```bash
-# Set environment variable
+# Set up OAuth credentials and configure
 export GOOGLE_OAUTH_CLIENT_SECRETS=/path/to/client_secrets.json
-
-# Run server (will open browser on first use)
-pipx run analytics-mcp
 ```
 
-### For ADC (Existing)
+**Option 2: Explicitly Enable ADC**
 ```bash
-# Set environment variable
-export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json
-
-# Run server (works as before)
-pipx run analytics-mcp
+# Keep using ADC by setting the new flag
+export GOOGLE_ANALYTICS_USE_ADC=true
 ```
+
+This is an intentional breaking change to align with the user-centric authentication model like JIRA MCP.
 
 ## Benefits
 
-1. **Easier Setup**: No gcloud CLI required for OAuth
-2. **Better UX**: Browser-based authentication is familiar to users
-3. **Personal Use**: Perfect for individual users accessing their own data
-4. **Flexible**: Users can choose between OAuth and ADC based on needs
-5. **Secure**: Industry-standard OAuth 2.0 implementation
-6. **Automatic**: Token refresh handled transparently
+1. **User-Centric**: Like JIRA MCP, authentication is tied to the user, not the server
+2. **Multi-User Support**: Different users can authenticate with their own accounts
+3. **Clear Setup**: Helpful error messages guide users through configuration
+4. **Better UX**: OAuth is the default, matching user expectations
+5. **Flexible Access**: Each user sees only their GA properties based on their permissions
+6. **Professional**: Aligns with industry standards for user-facing MCP servers
+7. **Explicit**: ADC requires explicit opt-in, reducing misconfiguration
 
-## Future Enhancements (Optional)
+## Usage Examples
 
-Potential improvements not included in this PR:
-1. Support for multiple user profiles
-2. CLI command to clear/refresh tokens manually
-3. Token expiration notifications
-4. Support for OAuth in Cloudflare Workers deployment
-5. Integration tests with actual Google APIs
+### Standard Configuration (OAuth)
+```json
+{
+  "mcpServers": {
+    "analytics-mcp": {
+      "command": "pipx",
+      "args": ["run", "analytics-mcp"],
+      "env": {
+        "GOOGLE_OAUTH_CLIENT_SECRETS": "/path/to/client_secrets.json"
+      }
+    }
+  }
+}
+```
 
-## Documentation
-
-All documentation has been updated:
-- ✅ Main README.md updated with OAuth instructions
-- ✅ Comprehensive OAuth setup guide created
-- ✅ Examples with detailed comments
-- ✅ Inline code documentation
-- ✅ Troubleshooting guides
+### Automation Configuration (ADC)
+```json
+{
+  "mcpServers": {
+    "analytics-mcp": {
+      "command": "pipx",
+      "args": ["run", "analytics-mcp"],
+      "env": {
+        "GOOGLE_ANALYTICS_USE_ADC": "true",
+        "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/credentials.json"
+      }
+    }
+  }
+}
+```
 
 ## Conclusion
 
-This implementation successfully adds OAuth user authentication to the Google Analytics MCP Server while maintaining full backward compatibility. The solution is:
-- Well-tested (9 passing tests)
-- Secure (0 security alerts)
-- Well-documented (comprehensive guides and examples)
-- User-friendly (browser-based auth flow)
-- Production-ready
+This implementation successfully transforms the Google Analytics MCP Server to work like JIRA MCP with user-centric authentication:
+- ✅ OAuth is now the default and primary method
+- ✅ Users must authenticate to use the server
+- ✅ Each user's account determines GA access
+- ✅ Multiple users can use their own accounts
+- ✅ Clear error messages guide setup
+- ✅ ADC still available for automation
+- ✅ All tests passing (13/13)
+- ✅ Well documented
+- ✅ Code formatted with black
 
-Users can now choose between:
-1. **OAuth** for personal use (new, recommended for individuals)
-2. **ADC** for automation and service accounts (existing, unchanged)
+The server now asks users to authenticate and operates using their authenticated Google account, exactly as requested in the problem statement.
