@@ -20,6 +20,52 @@ of the server.
 """
 
 from mcp.server.fastmcp import FastMCP
+from analytics_mcp.authorization import (
+    create_approval_prompts,
+    format_approval_message,
+)
 
 # Creates the singleton.
 mcp = FastMCP("Google Analytics Server")
+
+
+# Register authorization prompts for sensitive operations
+@mcp.prompt(name="approve_data_access")
+async def approval_prompt_data_access(
+    operation: str,
+    property_id: str = "",
+    data_scope: str = "Google Analytics data",
+):
+    """Request user approval to access Google Analytics data.
+
+    Args:
+        operation: The operation requesting data access
+        property_id: The Google Analytics property ID being accessed (optional)
+        data_scope: Description of what data will be accessed (optional)
+    """
+    message = format_approval_message(
+        "approve_data_access",
+        {
+            "operation": operation,
+            "property_id": property_id,
+            "data_scope": data_scope,
+        },
+    )
+
+    return [{"role": "user", "content": {"type": "text", "text": message}}]
+
+
+@mcp.prompt(name="approve_account_access")
+async def approval_prompt_account_access(operation: str, account_id: str = ""):
+    """Request user approval to access Google Analytics account information.
+
+    Args:
+        operation: The operation requesting account access
+        account_id: The account ID being accessed (optional)
+    """
+    message = format_approval_message(
+        "approve_account_access",
+        {"operation": operation, "account_id": account_id},
+    )
+
+    return [{"role": "user", "content": {"type": "text", "text": message}}]
