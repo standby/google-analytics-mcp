@@ -2,6 +2,8 @@
 
 This directory contains a Cloudflare Workers implementation of the Google Analytics MCP Server, allowing you to run the server on Cloudflare's edge network.
 
+> **Authentication Note:** This Cloudflare implementation uses **service account authentication** only. For OAuth 2.0 user authentication with your personal Google account, use the [local Python server](../README.md#configure-credentials-) instead.
+
 ## Features
 
 - **Serverless deployment**: No infrastructure to manage

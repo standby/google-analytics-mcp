@@ -53,7 +53,12 @@ This MCP server can be deployed in two ways:
 Run the server locally on your machine using Python and pipx. Best for:
 - Desktop applications (Claude Desktop, Gemini Code Assist)
 - Local development
-- Direct access to Application Default Credentials
+- Personal use with your Google account (OAuth)
+- Automation with Application Default Credentials (ADC)
+
+**Authentication Options:**
+- **OAuth 2.0**: Authenticate with your Google account (easiest for personal use)
+- **ADC**: Use Application Default Credentials (for automation/service accounts)
 
 See [Local Setup Instructions](#local-setup-instructions-) below.
 
@@ -64,6 +69,8 @@ Deploy the server to Cloudflare's global edge network. Best for:
 - Cloud-based LLM integrations
 - Global low-latency access
 - No local infrastructure required
+
+**Authentication:** Service account only (server-to-server authentication)
 
 See the **[Cloudflare Deployment Guide](CLOUDFLARE.md)** for complete instructions, or jump directly to:
 - [Quick Start](CLOUDFLARE.md#quick-start)
@@ -98,10 +105,23 @@ to enable the following APIs in your Google Cloud project:
 
 ### Configure credentials 🔑
 
-Configure your [Application Default Credentials
-(ADC)](https://cloud.google.com/docs/authentication/provide-credentials-adc).
-Make sure the credentials are for a user with access to your Google Analytics
-accounts or properties.
+The server supports two authentication methods:
+
+#### Option 1: OAuth User Authentication (Recommended for Personal Use)
+
+Authenticate with your personal Google account. This is the easiest method for individual users and doesn't require gcloud CLI.
+
+See the **[OAuth Setup Guide](docs/OAUTH_SETUP.md)** for detailed instructions.
+
+Quick setup:
+1. Create OAuth 2.0 credentials in Google Cloud Console
+2. Download the client secrets JSON file
+3. Set `GOOGLE_OAUTH_CLIENT_SECRETS` environment variable to the file path
+4. The server will prompt you to authenticate in your browser on first use
+
+#### Option 2: Application Default Credentials (ADC)
+
+Use [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/provide-credentials-adc) with gcloud CLI or service accounts. Best for automation and service-to-service authentication.
 
 Credentials must include the Google Analytics read-only scope:
 
@@ -150,7 +170,26 @@ Credentials saved to file: [PATH_TO_CREDENTIALS_JSON]
 1.  Create or edit the file at `~/.gemini/settings.json`, adding your server
     to the `mcpServers` list.
 
-    Replace `PATH_TO_CREDENTIALS_JSON` with the path you copied in the previous
+    **For OAuth authentication** (recommended for personal use), set the `GOOGLE_OAUTH_CLIENT_SECRETS` variable:
+
+    ```json
+    {
+      "mcpServers": {
+        "analytics-mcp": {
+          "command": "pipx",
+          "args": [
+            "run",
+            "analytics-mcp"
+          ],
+          "env": {
+            "GOOGLE_OAUTH_CLIENT_SECRETS": "/path/to/your/oauth-client-secrets.json"
+          }
+        }
+      }
+    }
+    ```
+
+    **For ADC authentication**, replace `PATH_TO_CREDENTIALS_JSON` with the path you copied in the previous
     step.
 
     We also recommend that you add a `GOOGLE_CLOUD_PROJECT` attribute to the

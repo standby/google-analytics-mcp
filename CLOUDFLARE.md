@@ -2,6 +2,8 @@
 
 The Google Analytics MCP Server can now be deployed to [Cloudflare Workers](https://workers.cloudflare.com/), enabling serverless, globally distributed deployment.
 
+> **Note on Authentication:** This Cloudflare deployment uses **service account authentication** only. If you want to use OAuth 2.0 with your personal Google account, use the [local Python server](README.md#local-setup-instructions-) instead. Both deployments can run simultaneously and independently.
+
 ## Why Cloudflare Workers?
 
 - ✅ **Serverless**: No infrastructure to manage
@@ -169,9 +171,9 @@ Test with:
 | **Scalability** | Limited by machine | Unlimited |
 | **Availability** | When computer on | 24/7 global |
 | **Latency** | Local only | Low worldwide |
-| **Setup** | Python, pipx, ADC | Node, Wrangler |
+| **Setup** | Python, pipx | Node, Wrangler |
 | **Cost** | Free | Free - $5/month |
-| **Credentials** | ADC file | Service account |
+| **Authentication** | OAuth OR ADC | Service account only |
 | **Best For** | Desktop apps | Cloud/production |
 
 ## Troubleshooting
@@ -230,4 +232,8 @@ wrangler secret put GOOGLE_SERVICE_ACCOUNT_KEY
 
 ---
 
-**Note**: Both the local Python server and Cloudflare deployment can coexist. Use the local server for desktop applications and Cloudflare for production/cloud integrations.
+**Note**: Both the local Python server and Cloudflare deployment can coexist and serve different use cases:
+- **Local Python server**: Best for desktop apps, supports OAuth 2.0 (personal Google account) or ADC
+- **Cloudflare Workers**: Best for production/cloud, uses service account authentication only
+
+Each deployment is independent with its own authentication method.
