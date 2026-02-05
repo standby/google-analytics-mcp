@@ -76,6 +76,8 @@ before execution:
 MCP clients implementing proper authorization should use the approval prompts
 to request user consent before calling these tools.
 
+**For detailed examples and implementation guidelines, see [docs/AUTHORIZATION.md](docs/AUTHORIZATION.md)**.
+
 ## Deployment Options 🚀
 
 This MCP server can be deployed in two ways:
