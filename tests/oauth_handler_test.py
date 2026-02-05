@@ -72,7 +72,9 @@ class TestOAuthHandler(unittest.TestCase):
         """Tests that initialization fails without client secrets."""
         with self.assertRaises(ValueError) as context:
             OAuthHandler()
-        self.assertIn("OAuth client secrets file must be provided", str(context.exception))
+        self.assertIn(
+            "OAuth client secrets file must be provided", str(context.exception)
+        )
 
     def test_clear_credentials(self):
         """Tests clearing stored credentials."""

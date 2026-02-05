@@ -53,26 +53,29 @@ def _create_credentials() -> google.auth.credentials.Credentials:
     """Returns credentials with read-only scope.
 
     Supports both OAuth (user authentication) and ADC (Application Default Credentials).
-    
+
     OAuth mode is enabled when GOOGLE_OAUTH_CLIENT_SECRETS environment variable is set.
     In OAuth mode, the server will prompt for user authentication if needed.
-    
+
     ADC mode is used when GOOGLE_OAUTH_CLIENT_SECRETS is not set.
     This is the default behavior and uses gcloud credentials or service accounts.
     """
     global _oauth_credentials
-    
+
     # Check if OAuth mode is enabled
     if os.environ.get("GOOGLE_OAUTH_CLIENT_SECRETS"):
         # Use OAuth user authentication
         if _oauth_credentials is None:
             from analytics_mcp.oauth_handler import OAuthHandler
+
             handler = OAuthHandler()
             _oauth_credentials = handler.get_credentials()
         return _oauth_credentials
     else:
         # Use Application Default Credentials (existing behavior)
-        credentials, _ = google.auth.default(scopes=[_READ_ONLY_ANALYTICS_SCOPE])
+        credentials, _ = google.auth.default(
+            scopes=[_READ_ONLY_ANALYTICS_SCOPE]
+        )
         return credentials
 
 

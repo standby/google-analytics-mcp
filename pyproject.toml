@@ -59,3 +59,6 @@ dev = [
 [build-system]
 requires = ["setuptools>=69.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["analytics_mcp", "analytics_mcp.tools", "analytics_mcp.tools.admin", "analytics_mcp.tools.reporting"]
