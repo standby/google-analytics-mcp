@@ -44,6 +44,38 @@ to provide several
 - `run_realtime_report`: Runs a Google Analytics realtime report using the
   Data API.
 
+## Authorization and Security 🔒
+
+This MCP server implements authorization according to the
+[MCP Security Guidelines](https://modelcontextprotocol.io/docs/tutorials/security/authorization).
+The server provides approval prompts for sensitive operations to ensure user consent
+before accessing Google Analytics data.
+
+### Approval Prompts
+
+The server exposes two approval prompts that LLM clients can use to request
+user authorization:
+
+- **`approve_data_access`**: Requests approval before accessing Google Analytics
+  data (e.g., running reports, accessing realtime data)
+- **`approve_account_access`**: Requests approval before accessing account
+  information (e.g., account summaries, property details)
+
+### Tools Requiring Approval
+
+The following tools are considered sensitive and should request user approval
+before execution:
+
+- `run_report`
+- `run_realtime_report`
+- `get_account_summaries`
+- `get_property_details`
+- `list_google_ads_links`
+- `get_custom_dimensions_and_metrics`
+
+MCP clients implementing proper authorization should use the approval prompts
+to request user consent before calling these tools.
+
 ## Deployment Options 🚀
 
 This MCP server can be deployed in two ways:
