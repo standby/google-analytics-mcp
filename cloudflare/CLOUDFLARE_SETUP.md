@@ -359,7 +359,9 @@ A: No! The free tier includes 100,000 requests per day, which is sufficient for 
 
 ### Q: Can I use this with my existing Google Analytics user credentials?
 
-A: No, you must use a service account. Service accounts are designed for server-to-server authentication and are more secure for production deployments.
+A: **For Cloudflare Workers deployment:** No, you must use a service account. Service accounts are designed for server-to-server authentication and are more secure for production deployments.
+
+**For local Python server:** Yes! The local server now supports OAuth 2.0 user authentication. See the [OAuth Setup Guide](../docs/OAUTH_SETUP.md) for instructions. You can authenticate with your Google account instead of using service accounts or ADC.
 
 ### Q: How much does Cloudflare KV storage cost?
 
@@ -383,7 +385,11 @@ A: Use `wrangler tail` to see real-time logs from your worker. You can also view
 
 ### Q: Can I use this with the Python MCP server?
 
-A: Yes! You can run both the Python server locally and the Cloudflare Worker deployment. They're independent and use different authentication methods.
+A: Yes! You can run both the Python server locally and the Cloudflare Worker deployment. They're independent and use different authentication methods:
+- **Local Python server**: Supports OAuth 2.0 (user authentication) OR Application Default Credentials (ADC)
+- **Cloudflare Workers**: Uses service account authentication only
+
+See the main [README](../README.md) for local server setup with OAuth, or [OAUTH_SETUP.md](../docs/OAUTH_SETUP.md) for detailed OAuth instructions.
 
 ### Q: Is my service account key secure?
 

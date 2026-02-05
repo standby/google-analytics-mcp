@@ -67,11 +67,13 @@ This document describes the architecture of the Google Analytics MCP Server on C
 ### 2. auth.ts (Authentication)
 
 **Responsibilities:**
-- Manage Google OAuth 2.0 service account authentication
+- Manage Google service account authentication using OAuth 2.0 protocol
 - Create and sign JWTs using RS256 algorithm
 - Exchange JWTs for access tokens
 - Cache tokens in KV storage
 - Automatically refresh expired tokens
+
+> **Note:** This uses service account authentication (server-to-server), not user OAuth. For user OAuth authentication, see the [local Python server](../docs/OAUTH_SETUP.md).
 
 **Key Functions:**
 - `getAccessToken()`: Main entry point, checks cache first

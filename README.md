@@ -53,7 +53,12 @@ This MCP server can be deployed in two ways:
 Run the server locally on your machine using Python and pipx. Best for:
 - Desktop applications (Claude Desktop, Gemini Code Assist)
 - Local development
-- Direct access to Application Default Credentials
+- Personal use with your Google account (OAuth)
+- Automation with Application Default Credentials (ADC)
+
+**Authentication Options:**
+- **OAuth 2.0**: Authenticate with your Google account (easiest for personal use)
+- **ADC**: Use Application Default Credentials (for automation/service accounts)
 
 See [Local Setup Instructions](#local-setup-instructions-) below.
 
@@ -64,6 +69,8 @@ Deploy the server to Cloudflare's global edge network. Best for:
 - Cloud-based LLM integrations
 - Global low-latency access
 - No local infrastructure required
+
+**Authentication:** Service account only (server-to-server authentication)
 
 See the **[Cloudflare Deployment Guide](CLOUDFLARE.md)** for complete instructions, or jump directly to:
 - [Quick Start](CLOUDFLARE.md#quick-start)
