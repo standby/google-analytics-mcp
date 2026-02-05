@@ -19,7 +19,7 @@ from typing import Dict, List, Any
 
 def create_approval_prompts() -> List[Dict[str, Any]]:
     """Creates a list of approval prompt templates for sensitive operations.
-    
+
     Returns:
         A list of prompt templates that request user approval for
         sensitive operations like data access and account modifications.
@@ -32,19 +32,19 @@ def create_approval_prompts() -> List[Dict[str, Any]]:
                 {
                     "name": "operation",
                     "description": "The operation requesting data access (e.g., 'run_report', 'get_account_summaries')",
-                    "required": True
+                    "required": True,
                 },
                 {
                     "name": "property_id",
                     "description": "The Google Analytics property ID being accessed",
-                    "required": False
+                    "required": False,
                 },
                 {
                     "name": "data_scope",
                     "description": "Description of what data will be accessed",
-                    "required": False
-                }
-            ]
+                    "required": False,
+                },
+            ],
         },
         {
             "name": "approve_account_access",
@@ -53,28 +53,25 @@ def create_approval_prompts() -> List[Dict[str, Any]]:
                 {
                     "name": "operation",
                     "description": "The operation requesting account access",
-                    "required": True
+                    "required": True,
                 },
                 {
                     "name": "account_id",
                     "description": "The account ID being accessed",
-                    "required": False
-                }
-            ]
-        }
+                    "required": False,
+                },
+            ],
+        },
     ]
 
 
-def format_approval_message(
-    prompt_name: str, 
-    arguments: Dict[str, Any]
-) -> str:
+def format_approval_message(prompt_name: str, arguments: Dict[str, Any]) -> str:
     """Formats an approval request message based on the prompt and arguments.
-    
+
     Args:
         prompt_name: The name of the approval prompt
         arguments: The arguments for the approval request
-        
+
     Returns:
         A formatted approval message string
     """
@@ -82,34 +79,36 @@ def format_approval_message(
         operation = arguments.get("operation", "unknown operation")
         property_id = arguments.get("property_id", "")
         data_scope = arguments.get("data_scope", "Google Analytics data")
-        
-        message = f"The operation '{operation}' is requesting access to {data_scope}."
+
+        message = (
+            f"The operation '{operation}' is requesting access to {data_scope}."
+        )
         if property_id:
             message += f"\n\nProperty ID: {property_id}"
         message += "\n\nDo you approve this data access?"
-        
+
         return message
-        
+
     elif prompt_name == "approve_account_access":
         operation = arguments.get("operation", "unknown operation")
         account_id = arguments.get("account_id", "")
-        
+
         message = f"The operation '{operation}' is requesting access to your Google Analytics account information."
         if account_id:
             message += f"\n\nAccount ID: {account_id}"
         message += "\n\nDo you approve this account access?"
-        
+
         return message
-    
+
     return "An operation is requesting approval. Do you approve?"
 
 
 def requires_approval(tool_name: str) -> bool:
     """Determines if a tool requires user approval before execution.
-    
+
     Args:
         tool_name: The name of the tool being called
-        
+
     Returns:
         True if the tool requires approval, False otherwise
     """
@@ -120,18 +119,18 @@ def requires_approval(tool_name: str) -> bool:
         "get_account_summaries",
         "get_property_details",
         "list_google_ads_links",
-        "get_custom_dimensions_and_metrics"
+        "get_custom_dimensions_and_metrics",
     }
-    
+
     return tool_name in sensitive_tools
 
 
 def get_approval_prompt_for_tool(tool_name: str) -> str:
     """Gets the appropriate approval prompt name for a given tool.
-    
+
     Args:
         tool_name: The name of the tool being called
-        
+
     Returns:
         The name of the approval prompt to use
     """
@@ -139,9 +138,9 @@ def get_approval_prompt_for_tool(tool_name: str) -> str:
     account_tools = {
         "get_account_summaries",
         "get_property_details",
-        "list_google_ads_links"
+        "list_google_ads_links",
     }
-    
+
     if tool_name in account_tools:
         return "approve_account_access"
     else:

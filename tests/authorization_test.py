@@ -19,7 +19,7 @@ from analytics_mcp.authorization import (
     create_approval_prompts,
     format_approval_message,
     requires_approval,
-    get_approval_prompt_for_tool
+    get_approval_prompt_for_tool,
 )
 
 
@@ -29,21 +29,21 @@ class TestAuthorization(unittest.TestCase):
     def test_create_approval_prompts(self):
         """Test that approval prompts are created correctly."""
         prompts = create_approval_prompts()
-        
+
         self.assertIsInstance(prompts, list)
         self.assertGreater(len(prompts), 0)
-        
+
         # Check that required prompts exist
-        prompt_names = [p['name'] for p in prompts]
-        self.assertIn('approve_data_access', prompt_names)
-        self.assertIn('approve_account_access', prompt_names)
-        
+        prompt_names = [p["name"] for p in prompts]
+        self.assertIn("approve_data_access", prompt_names)
+        self.assertIn("approve_account_access", prompt_names)
+
         # Verify prompt structure
         for prompt in prompts:
-            self.assertIn('name', prompt)
-            self.assertIn('description', prompt)
-            self.assertIn('arguments', prompt)
-            self.assertIsInstance(prompt['arguments'], list)
+            self.assertIn("name", prompt)
+            self.assertIn("description", prompt)
+            self.assertIn("arguments", prompt)
+            self.assertIsInstance(prompt["arguments"], list)
 
     def test_format_approval_message_data_access(self):
         """Test formatting of data access approval message."""
@@ -52,10 +52,10 @@ class TestAuthorization(unittest.TestCase):
             {
                 "operation": "run_report",
                 "property_id": "properties/123456",
-                "data_scope": "pageview data"
-            }
+                "data_scope": "pageview data",
+            },
         )
-        
+
         self.assertIn("run_report", message)
         self.assertIn("properties/123456", message)
         self.assertIn("pageview data", message)
@@ -65,12 +65,9 @@ class TestAuthorization(unittest.TestCase):
         """Test formatting of account access approval message."""
         message = format_approval_message(
             "approve_account_access",
-            {
-                "operation": "get_account_summaries",
-                "account_id": "12345"
-            }
+            {"operation": "get_account_summaries", "account_id": "12345"},
         )
-        
+
         self.assertIn("get_account_summaries", message)
         self.assertIn("12345", message)
         self.assertIn("approve", message.lower())
@@ -78,12 +75,9 @@ class TestAuthorization(unittest.TestCase):
     def test_format_approval_message_minimal(self):
         """Test formatting with minimal arguments."""
         message = format_approval_message(
-            "approve_data_access",
-            {
-                "operation": "test_operation"
-            }
+            "approve_data_access", {"operation": "test_operation"}
         )
-        
+
         self.assertIn("test_operation", message)
         self.assertIn("approve", message.lower())
 
@@ -95,13 +89,13 @@ class TestAuthorization(unittest.TestCase):
             "get_account_summaries",
             "get_property_details",
             "list_google_ads_links",
-            "get_custom_dimensions_and_metrics"
+            "get_custom_dimensions_and_metrics",
         ]
-        
+
         for tool in sensitive_tools:
             self.assertTrue(
                 requires_approval(tool),
-                f"Tool '{tool}' should require approval"
+                f"Tool '{tool}' should require approval",
             )
 
     def test_requires_approval_non_sensitive(self):
@@ -114,9 +108,9 @@ class TestAuthorization(unittest.TestCase):
         account_tools = [
             "get_account_summaries",
             "get_property_details",
-            "list_google_ads_links"
+            "list_google_ads_links",
         ]
-        
+
         for tool in account_tools:
             prompt = get_approval_prompt_for_tool(tool)
             self.assertEqual(prompt, "approve_account_access")
@@ -126,13 +120,13 @@ class TestAuthorization(unittest.TestCase):
         data_tools = [
             "run_report",
             "run_realtime_report",
-            "get_custom_dimensions_and_metrics"
+            "get_custom_dimensions_and_metrics",
         ]
-        
+
         for tool in data_tools:
             prompt = get_approval_prompt_for_tool(tool)
             self.assertEqual(prompt, "approve_data_access")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
