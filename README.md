@@ -44,7 +44,33 @@ to provide several
 - `run_realtime_report`: Runs a Google Analytics realtime report using the
   Data API.
 
-## Setup instructions 🔧
+## Deployment Options 🚀
+
+This MCP server can be deployed in two ways:
+
+### 1. Local Python Server (Recommended for Desktop)
+
+Run the server locally on your machine using Python and pipx. Best for:
+- Desktop applications (Claude Desktop, Gemini Code Assist)
+- Local development
+- Direct access to Application Default Credentials
+
+See [Local Setup Instructions](#local-setup-instructions-) below.
+
+### 2. Cloudflare Workers (Recommended for Production/Cloud)
+
+Deploy the server to Cloudflare's global edge network. Best for:
+- Production deployments
+- Cloud-based LLM integrations
+- Global low-latency access
+- No local infrastructure required
+
+See the **[Cloudflare Deployment Guide](CLOUDFLARE.md)** for complete instructions, or jump directly to:
+- [Quick Start](CLOUDFLARE.md#quick-start)
+- [Complete Setup](cloudflare/CLOUDFLARE_SETUP.md)
+- [Architecture](cloudflare/ARCHITECTURE.md)
+
+## Local Setup Instructions 🔧
 
 ✨ Watch the [Google Analytics MCP Setup
 Tutorial](https://youtu.be/nS8HLdwmVlY) on YouTube for a step-by-step

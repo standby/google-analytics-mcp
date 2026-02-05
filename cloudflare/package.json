@@ -1,0 +1,26 @@
+{
+  "name": "analytics-mcp-cloudflare",
+  "version": "0.1.0",
+  "description": "Google Analytics MCP Server for Cloudflare Workers",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "start": "wrangler dev",
+    "cf-typegen": "wrangler types"
+  },
+  "keywords": [
+    "google-analytics",
+    "mcp",
+    "cloudflare",
+    "workers"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "wrangler": "^3.94.0",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,25 @@
+# Example wrangler.toml configuration
+# Copy this to wrangler.toml and update with your values
+
+name = "analytics-mcp"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+# KV namespace for storing stateful information
+# Create with: wrangler kv:namespace create "MCP_STATE"
+[[kv_namespaces]]
+binding = "MCP_STATE"
+id = "YOUR_KV_NAMESPACE_ID"  # Replace with your production namespace ID
+preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID"  # Replace with your preview namespace ID
+
+# Public environment variables (non-sensitive)
+# You can set these here or in the Cloudflare dashboard
+[vars]
+# GOOGLE_CLOUD_PROJECT = "your-project-id"
+
+# Secrets (sensitive data) should be set using:
+# wrangler secret put GOOGLE_SERVICE_ACCOUNT_KEY
+# 
+# Required secrets:
+# - GOOGLE_SERVICE_ACCOUNT_KEY: Complete JSON content of your service account key file
+#   (includes client_email, private_key, token_uri, and other fields)
