@@ -15,6 +15,7 @@
 """Common utilities used by the MCP server."""
 
 import os
+import threading
 from typing import Any, Dict, Optional
 
 from google.analytics import admin_v1beta, data_v1beta, admin_v1alpha
@@ -47,6 +48,7 @@ _READ_ONLY_ANALYTICS_SCOPE = (
 
 # Global credentials cache for OAuth mode
 _oauth_credentials: Optional[google.auth.credentials.Credentials] = None
+_oauth_credentials_lock = threading.Lock()
 
 
 def _create_credentials() -> google.auth.credentials.Credentials:
@@ -64,13 +66,14 @@ def _create_credentials() -> google.auth.credentials.Credentials:
 
     # Check if OAuth mode is enabled
     if os.environ.get("GOOGLE_OAUTH_CLIENT_SECRETS"):
-        # Use OAuth user authentication
-        if _oauth_credentials is None:
-            from analytics_mcp.oauth_handler import OAuthHandler
+        # Use OAuth user authentication with thread-safe caching
+        with _oauth_credentials_lock:
+            if _oauth_credentials is None:
+                from analytics_mcp.oauth_handler import OAuthHandler
 
-            handler = OAuthHandler()
-            _oauth_credentials = handler.get_credentials()
-        return _oauth_credentials
+                handler = OAuthHandler()
+                _oauth_credentials = handler.get_credentials()
+            return _oauth_credentials
     else:
         # Use Application Default Credentials (existing behavior)
         credentials, _ = google.auth.default(
