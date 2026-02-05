@@ -53,12 +53,11 @@ This MCP server can be deployed in two ways:
 Run the server locally on your machine using Python and pipx. Best for:
 - Desktop applications (Claude Desktop, Gemini Code Assist)
 - Local development
-- Personal use with your Google account (OAuth)
-- Automation with Application Default Credentials (ADC)
+- Personal use with your Google account
 
-**Authentication Options:**
-- **OAuth 2.0**: Authenticate with your Google account (easiest for personal use)
-- **ADC**: Use Application Default Credentials (for automation/service accounts)
+**Authentication:**
+- **User Authentication (Default)**: The server authenticates using your Google account, allowing you to access your Google Analytics properties. Each user authenticates with their own account, which can have different GA permissions.
+- **Service Account (Optional)**: For automation or server-to-server use cases, you can optionally use Application Default Credentials (ADC).
 
 See [Local Setup Instructions](#local-setup-instructions-) below.
 
@@ -105,23 +104,31 @@ to enable the following APIs in your Google Cloud project:
 
 ### Configure credentials 🔑
 
-The server supports two authentication methods:
+**The server requires user authentication to access Google Analytics.** When you connect with the MCP server, it will prompt you to authenticate with your Google account. This allows different users to login with their own Google accounts and access their respective Google Analytics properties.
 
-#### Option 1: OAuth User Authentication (Recommended for Personal Use)
+#### OAuth User Authentication (Required)
 
-Authenticate with your personal Google account. This is the easiest method for individual users and doesn't require gcloud CLI.
+Set up OAuth 2.0 to authenticate with your Google account:
 
 See the **[OAuth Setup Guide](docs/OAUTH_SETUP.md)** for detailed instructions.
 
-Quick setup:
-1. Create OAuth 2.0 credentials in Google Cloud Console
+**Quick setup:**
+1. Create OAuth 2.0 credentials in [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
 2. Download the client secrets JSON file
 3. Set `GOOGLE_OAUTH_CLIENT_SECRETS` environment variable to the file path
 4. The server will prompt you to authenticate in your browser on first use
+5. Your authentication will be saved for future use
 
-#### Option 2: Application Default Credentials (ADC)
+**That's it!** The server will use your authenticated account for all Google Analytics operations.
 
-Use [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/provide-credentials-adc) with gcloud CLI or service accounts. Best for automation and service-to-service authentication.
+#### Alternative: Application Default Credentials (For Automation)
+
+If you need to use service accounts or automation (instead of user authentication), you can optionally use [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/provide-credentials-adc).
+
+To use ADC, set the environment variable:
+```
+GOOGLE_ANALYTICS_USE_ADC=true
+```
 
 Credentials must include the Google Analytics read-only scope:
 
@@ -170,7 +177,7 @@ Credentials saved to file: [PATH_TO_CREDENTIALS_JSON]
 1.  Create or edit the file at `~/.gemini/settings.json`, adding your server
     to the `mcpServers` list.
 
-    **For OAuth authentication** (recommended for personal use), set the `GOOGLE_OAUTH_CLIENT_SECRETS` variable:
+    **Standard configuration** (user authentication):
 
     ```json
     {
@@ -189,13 +196,7 @@ Credentials saved to file: [PATH_TO_CREDENTIALS_JSON]
     }
     ```
 
-    **For ADC authentication**, replace `PATH_TO_CREDENTIALS_JSON` with the path you copied in the previous
-    step.
-
-    We also recommend that you add a `GOOGLE_CLOUD_PROJECT` attribute to the
-    `env` object. Replace `YOUR_PROJECT_ID` in the following example with the
-    [project ID](https://support.google.com/googleapi/answer/7014113) of your
-    Google Cloud project.
+    **For ADC/automation**, add `GOOGLE_ANALYTICS_USE_ADC=true` and optionally set `GOOGLE_APPLICATION_CREDENTIALS`:
 
     ```json
     {
@@ -207,8 +208,9 @@ Credentials saved to file: [PATH_TO_CREDENTIALS_JSON]
             "analytics-mcp"
           ],
           "env": {
+            "GOOGLE_ANALYTICS_USE_ADC": "true",
             "GOOGLE_APPLICATION_CREDENTIALS": "PATH_TO_CREDENTIALS_JSON",
-            "GOOGLE_PROJECT_ID": "YOUR_PROJECT_ID"
+            "GOOGLE_CLOUD_PROJECT": "YOUR_PROJECT_ID"
           }
         }
       }

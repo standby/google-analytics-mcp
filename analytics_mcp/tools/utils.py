@@ -56,30 +56,71 @@ def _create_credentials() -> google.auth.credentials.Credentials:
 
     Supports both OAuth (user authentication) and ADC (Application Default Credentials).
 
-    OAuth mode is enabled when GOOGLE_OAUTH_CLIENT_SECRETS environment variable is set.
-    In OAuth mode, the server will prompt for user authentication if needed.
+    By default, OAuth user authentication is used, which prompts users to authenticate
+    with their Google account. This allows different users to connect with their own
+    Google accounts and access their Google Analytics properties.
 
-    ADC mode is used when GOOGLE_OAUTH_CLIENT_SECRETS is not set.
-    This is the default behavior and uses gcloud credentials or service accounts.
+    OAuth mode requires the GOOGLE_OAUTH_CLIENT_SECRETS environment variable to be set
+    to the path of your OAuth client secrets JSON file.
+
+    ADC mode can be explicitly enabled by setting GOOGLE_ANALYTICS_USE_ADC=true.
+    This is useful for automation, service accounts, and server-to-server authentication.
     """
     global _oauth_credentials
 
-    # Check if OAuth mode is enabled
-    if os.environ.get("GOOGLE_OAUTH_CLIENT_SECRETS"):
-        # Use OAuth user authentication with thread-safe caching
-        with _oauth_credentials_lock:
-            if _oauth_credentials is None:
-                from analytics_mcp.oauth_handler import OAuthHandler
+    # Check if ADC mode is explicitly requested
+    use_adc = os.environ.get("GOOGLE_ANALYTICS_USE_ADC", "").lower() == "true"
 
-                handler = OAuthHandler()
-                _oauth_credentials = handler.get_credentials()
-            return _oauth_credentials
-    else:
-        # Use Application Default Credentials (existing behavior)
+    if use_adc:
+        # Use Application Default Credentials (for automation/service accounts)
         credentials, _ = google.auth.default(
             scopes=[_READ_ONLY_ANALYTICS_SCOPE]
         )
         return credentials
+
+    # Default to OAuth user authentication
+    if not os.environ.get("GOOGLE_OAUTH_CLIENT_SECRETS"):
+        # OAuth is the default, provide helpful error message
+        raise ValueError(
+            "\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "  Google Analytics MCP Server - Authentication Required\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "This server requires user authentication to access Google Analytics.\n"
+            "Please set up OAuth 2.0 authentication:\n\n"
+            "1. Create OAuth 2.0 credentials in Google Cloud Console:\n"
+            "   https://console.cloud.google.com/apis/credentials\n\n"
+            "2. Download the client secrets JSON file\n\n"
+            "3. Set the GOOGLE_OAUTH_CLIENT_SECRETS environment variable:\n"
+            "   export GOOGLE_OAUTH_CLIENT_SECRETS=/path/to/client_secrets.json\n\n"
+            "4. Add it to your MCP client configuration (e.g., ~/.gemini/settings.json):\n"
+            "   {\n"
+            '     "mcpServers": {\n'
+            '       "analytics-mcp": {\n'
+            '         "command": "pipx",\n'
+            '         "args": ["run", "analytics-mcp"],\n'
+            '         "env": {\n'
+            '           "GOOGLE_OAUTH_CLIENT_SECRETS": "/path/to/client_secrets.json"\n'
+            "         }\n"
+            "       }\n"
+            "     }\n"
+            "   }\n\n"
+            "For detailed setup instructions, see:\n"
+            "https://github.com/googleanalytics/google-analytics-mcp/blob/main/docs/OAUTH_SETUP.md\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "For automation/service accounts, you can use ADC instead:\n"
+            "Set GOOGLE_ANALYTICS_USE_ADC=true to use Application Default Credentials\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        )
+
+    # Use OAuth user authentication with thread-safe caching
+    with _oauth_credentials_lock:
+        if _oauth_credentials is None:
+            from analytics_mcp.oauth_handler import OAuthHandler
+
+            handler = OAuthHandler()
+            _oauth_credentials = handler.get_credentials()
+        return _oauth_credentials
 
 
 def create_admin_api_client() -> admin_v1beta.AnalyticsAdminServiceAsyncClient:

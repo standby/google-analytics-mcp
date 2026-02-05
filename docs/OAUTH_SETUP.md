@@ -1,14 +1,32 @@
 # OAuth User Authentication Setup Guide
 
-This guide explains how to set up OAuth 2.0 user authentication for the Google Analytics MCP Server. This allows the server to authenticate using your personal Google account instead of Application Default Credentials (ADC) or service accounts.
+This guide explains how to set up OAuth 2.0 user authentication for the Google Analytics MCP Server. **This is the primary and recommended authentication method** that allows you to authenticate with your Google account and access your Google Analytics properties.
+
+## Why User Authentication?
+
+User authentication allows:
+- **Each user to authenticate with their own Google account** (e.g., xxx@abc.com, yyy@example.com)
+- **Different users to access different Google Analytics properties** based on their account permissions
+- **The MCP server to work with multiple GA accounts** by switching users
+- **No need for service accounts or complex credential management**
+
+This is the same approach used by JIRA MCP and other user-centric MCP servers.
 
 ## When to Use OAuth Authentication
+
+**OAuth authentication is the default and recommended method for most users.**
 
 Use OAuth authentication when you want to:
 - Authenticate with your personal Google account
 - Access Google Analytics properties associated with your account
-- Avoid setting up service accounts or ADC
-- Run the server with user-level permissions
+- Allow different users to connect with their own accounts
+- Use the MCP server with desktop applications (Claude Desktop, Gemini Code Assist)
+
+Use Application Default Credentials (ADC) only for:
+- Automation and scheduled tasks
+- Server-to-server authentication
+- Service account deployments
+- CI/CD pipelines
 
 ## Prerequisites
 
@@ -190,17 +208,15 @@ The next time you use the server, it will prompt you to authenticate again.
 
 ## Switching Between Authentication Methods
 
-The server supports two authentication methods:
+The server uses OAuth user authentication by default.
 
-1. **OAuth (User Authentication)**: Enabled when `GOOGLE_OAUTH_CLIENT_SECRETS` is set
-2. **ADC (Application Default Credentials)**: Used when `GOOGLE_OAUTH_CLIENT_SECRETS` is NOT set
+**To use OAuth (default):**
+- Set the `GOOGLE_OAUTH_CLIENT_SECRETS` environment variable
+- The server will prompt you to authenticate with your Google account
 
-To switch from OAuth to ADC:
-- Remove the `GOOGLE_OAUTH_CLIENT_SECRETS` environment variable from your configuration
+**To use ADC (for automation):**
+- Set `GOOGLE_ANALYTICS_USE_ADC=true` environment variable
 - Set up ADC using the instructions in the main [README.md](../README.md#configure-credentials-)
-
-To switch from ADC to OAuth:
-- Follow the setup instructions in this guide
 
 ## Additional Resources
 
